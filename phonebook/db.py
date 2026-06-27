@@ -42,7 +42,34 @@ def init_db(db_path=None):
             """,
             (admin_email, "0000000000", password_hash, "What is the admin password?", bcrypt.hashpw(b"admin", bcrypt.gensalt()).decode("utf-8"), "admin", "2026-06-25 00:00:00"),
         )
+    # Tạo bảng contacts
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS contacts (
+            contact_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            phone TEXT,
+            email TEXT,
+            address TEXT,
+            category TEXT,
+            favorite INTEGER DEFAULT 0,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            deleted_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+        )
+        """
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_contacts_user_id ON contacts(user_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_contacts_name ON contacts(name)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone)")
 
+    # Thêm cột notes nếu bảng đã tồn tại (cho lần chạy sau)
+    existing_columns_contacts = {row[1] for row in conn.execute("PRAGMA table_info(contacts)")}
+    if "notes" not in existing_columns_contacts:
+        conn.execute("ALTER TABLE contacts ADD COLUMN notes TEXT")
     conn.commit()
     conn.close()
 

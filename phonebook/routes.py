@@ -2,7 +2,7 @@ from datetime import datetime
 from functools import wraps
 
 import bcrypt
-from flask import redirect, render_template, request, session, url_for
+from flask import redirect, render_template, request, session, url_for, jsonify
 
 from .db import get_db
 
@@ -103,9 +103,12 @@ def register_routes(app):
                     (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user["user_id"]),
                 )
                 conn.commit()
+                # Phân biệt role sau đăng nhập
                 if user["role"] == "admin":
                     return redirect(url_for("admin_dashboard"))
-                return redirect(url_for("user_dashboard"))
+                else:
+                    return redirect(url_for("list_contacts"))
+            # Nếu không đúng, trả về lỗi
             return render_page("auth/login.html", "Login", "Invalid email/phone or password.", True)
 
         return render_page("auth/login.html", "Login", message, error)
@@ -193,3 +196,110 @@ def register_routes(app):
     def logout():
         session.clear()
         return redirect(url_for("login"))
+
+    # ========== PHẦN 2: QUẢN LÝ CONTACTS ==========
+    @app.route("/contacts")
+    @login_required
+    def list_contacts():
+        user_id = session["user_id"]
+        db = get_db()
+        contacts = db.execute(
+            "SELECT * FROM contacts WHERE user_id = ? AND deleted_at IS NULL ORDER BY name",
+            (user_id,)
+        ).fetchall()
+        contacts_list = [dict(row) for row in contacts]
+        # Lấy email user để hiển thị trên sidebar
+        user = db.execute("SELECT email FROM users WHERE user_id = ?", (user_id,)).fetchone()
+        user_email = user["email"] if user else "User"
+        return render_template("contacts/dashboard.html", contacts=contacts_list, user_email=user_email)
+
+    @app.route("/contacts/create", methods=["POST"])
+    @login_required
+    def create_contact():
+        user_id = session["user_id"]
+        name = request.form.get("name", "").strip()
+        phone = request.form.get("phone", "").strip()
+        email = request.form.get("email", "").strip()
+        address = request.form.get("address", "").strip()
+        category = request.form.get("category", "").strip()
+        favorite = 1 if request.form.get("favorite") else 0
+        notes = request.form.get("notes", "").strip()
+
+        # Validate cơ bản
+        if not name:
+            return jsonify({"success": False, "message": "Name is required"}), 400
+        if not phone or not (9 <= len(phone) <= 11):
+            return jsonify({"success": False, "message": "Phone must be 9-11 digits"}), 400
+
+        db = get_db()
+
+        # Kiểm tra trùng email (nếu có nhập email)
+        if email:
+            existing_email = db.execute(
+                "SELECT 1 FROM contacts WHERE user_id = ? AND email = ? AND deleted_at IS NULL",
+                (user_id, email)
+            ).fetchone()
+            if existing_email:
+                return jsonify({"success": False, "message": "Email already exists"}), 400
+
+        # Kiểm tra trùng số điện thoại (luôn kiểm tra vì phone đã có)
+        existing_phone = db.execute(
+            "SELECT 1 FROM contacts WHERE user_id = ? AND phone = ? AND deleted_at IS NULL",
+            (user_id, phone)
+        ).fetchone()
+        if existing_phone:
+            return jsonify({"success": False, "message": "Phone number already exists"}), 400
+
+        # Thêm mới
+        db.execute(
+            """
+            INSERT INTO contacts (user_id, name, phone, email, address, category, favorite, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, name, phone, email, address, category, favorite, notes)
+        )
+        db.commit()
+        return jsonify({"success": True, "message": "Contact added"})
+
+    @app.route("/contacts/search")
+    @login_required
+    def search_contacts():
+        user_id = session["user_id"]
+        q = request.args.get("q", "").strip()
+        db = get_db()
+        if q:
+            query = """
+                SELECT * FROM contacts
+                WHERE user_id = ? AND deleted_at IS NULL
+                AND (name LIKE ? OR phone LIKE ? OR email LIKE ?)
+                ORDER BY name
+            """
+            like = f"%{q}%"
+            rows = db.execute(query, (user_id, like, like, like)).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT * FROM contacts WHERE user_id = ? AND deleted_at IS NULL ORDER BY name",
+                (user_id,)
+            ).fetchall()
+        contacts = [dict(row) for row in rows]
+        return jsonify(contacts)
+
+    @app.route("/contacts/<int:contact_id>/delete", methods=["DELETE"])
+    @login_required
+    def delete_contact(contact_id):
+        user_id = session["user_id"]
+        db = get_db()
+        # Kiểm tra contact có tồn tại và thuộc về user không
+        contact = db.execute(
+            "SELECT * FROM contacts WHERE contact_id = ? AND user_id = ? AND deleted_at IS NULL",
+            (contact_id, user_id)
+        ).fetchone()
+        if not contact:
+            return jsonify({"error": "Contact not found"}), 404
+        # Soft delete: cập nhật deleted_at
+        db.execute(
+            "UPDATE contacts SET deleted_at = CURRENT_TIMESTAMP WHERE contact_id = ?",
+            (contact_id,)
+        )
+        db.commit()
+        return jsonify({"success": True})
