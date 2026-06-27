@@ -28,7 +28,7 @@ async function loadContacts(q = '') {
       phone_number: c.phone || '',
       email: c.email || '',
       tags: c.category ? [c.category] : [],
-      is_favorite: c.favorite === 1,
+      is_favorite: c.favorite === 1,   // CHỈ TRUE KHI favorite = 1
       notes: c.notes || '',
       profile_picture_url: null
     }));
@@ -121,6 +121,7 @@ function contactRowHtml(c, q) {
   const avatar = c.profile_picture_url
     ? `<img src="${esc(c.profile_picture_url)}" alt="" onerror="this.parentElement.innerHTML='<span>${ini}</span>'" />`
     : `<span>${ini}</span>`;
+  // chỉ hiển thị sao nếu is_favorite = true
   const fav = c.is_favorite ? `<div class="fav-star">★</div>` : '';
   const tags = (c.tags || []).map(t => `<span class="contact-tag">${t}</span>`).join('');
   const name  = highlight(esc(c.full_name), q);
@@ -209,6 +210,7 @@ async function submitContact() {
   const notes        = document.getElementById('f-notes').value.trim();
   const selectedChip = document.querySelector('.chip.selected');
   const category = selectedChip ? selectedChip.dataset.cat : '';
+  // Kiểm tra nếu chip "Favorites" được chọn
   const isFav = document.querySelector('.chip.selected[data-cat="Favorites"]') !== null;
 
   let err = false;
@@ -223,7 +225,7 @@ async function submitContact() {
   formData.append('email', email);
   formData.append('notes', notes);
   formData.append('category', category);
-  formData.append('favorite', isFav ? '1' : '0');
+  formData.append('favorite', isFav ? '1' : '0');  // Gửi 0 nếu không chọn
 
   try {
     const res = await fetch('/contacts/create', { method: 'POST', body: formData });

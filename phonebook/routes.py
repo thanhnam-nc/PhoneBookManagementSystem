@@ -35,7 +35,10 @@ def register_routes(app):
     @app.route("/")
     def index():
         if "user_id" in session:
-            return redirect(url_for("dashboard"))
+            if session.get("role") == "admin":
+                return redirect(url_for("admin_dashboard"))
+            else:
+                return redirect(url_for("list_contacts"))
         return redirect(url_for("login"))
 
     # Đăng ký tài khoản mới.
@@ -187,13 +190,11 @@ def register_routes(app):
     def dashboard():
         if session.get("role") == "admin":
             return redirect(url_for("admin_dashboard"))
-        return redirect(url_for("user_dashboard"))
-
-    # Trang dashboard dành cho user thường.
+        return redirect(url_for("list_contacts"))
     @app.route("/user-dashboard")
     @login_required
     def user_dashboard():
-        return render_template("auth/dashboard.html", title="User Dashboard", message=None, error=False, page_title="User Dashboard")
+        return redirect(url_for("list_contacts"))
 
     # Trang dashboard dành cho admin.
     @app.route("/admin-dashboard")
