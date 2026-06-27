@@ -1,9 +1,6 @@
 /* ── State ── */
 let allContacts = [];
-<<<<<<< HEAD
 let trashContacts = [];
-=======
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
 let currentFilter = 'all';
 let currentView = 'list';
 let searchTimer = null;
@@ -22,7 +19,6 @@ function initials(name) {
 /* ── Load contacts ── */
 async function loadContacts(q = '') {
   try {
-<<<<<<< HEAD
     const urlActive = q ? `/contacts/search?q=${encodeURIComponent(q)}&status=active` : '/contacts/search?q=&status=active';
     const urlTrash = q ? `/contacts/search?q=${encodeURIComponent(q)}&status=trash` : '/contacts/search?q=&status=trash';
     
@@ -37,19 +33,11 @@ async function loadContacts(q = '') {
     const dataTrash = await resTrash.json();
     
     const mapper = c => ({
-=======
-    const url = q ? `/contacts/search?q=${encodeURIComponent(q)}` : '/contacts/search?q=';
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to load');
-    const data = await res.json();
-    allContacts = data.map(c => ({
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
       contact_id: c.contact_id,
       full_name: c.name,
       phone_number: c.phone || '',
       email: c.email || '',
       tags: c.category ? [c.category] : [],
-<<<<<<< HEAD
       is_favorite: c.favorite === 1,
       notes: c.notes || '',
       profile_picture_url: null,
@@ -58,12 +46,6 @@ async function loadContacts(q = '') {
 
     allContacts = dataActive.map(mapper);
     trashContacts = dataTrash.map(mapper);
-=======
-      is_favorite: c.favorite === 1,   // CHỈ TRUE KHI favorite = 1
-      notes: c.notes || '',
-      profile_picture_url: null
-    }));
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
     render();
   } catch (e) {
     console.error(e);
@@ -75,26 +57,16 @@ async function loadContacts(q = '') {
 function filterView(type) {
   currentFilter = type;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-<<<<<<< HEAD
   const navMap = { all: 'nav-all', favorites: 'nav-fav', family: 'nav-family', work: 'nav-work', friends: 'nav-friends', trash: 'nav-trash' };
   document.getElementById(navMap[type])?.classList.add('active');
   const titles = { all: 'All Contacts', favorites: 'Favorites', family: 'Family', work: 'Work', friends: 'Friends', trash: 'Trash' };
-=======
-  const navMap = { all: 'nav-all', favorites: 'nav-fav', family: 'nav-family', work: 'nav-work', friends: 'nav-friends' };
-  document.getElementById(navMap[type])?.classList.add('active');
-  const titles = { all: 'All Contacts', favorites: 'Favorites', family: 'Family', work: 'Work', friends: 'Friends' };
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
   document.getElementById('page-title').textContent = titles[type] || 'All Contacts';
   render();
 }
 
 function getFiltered() {
   const q = document.getElementById('search-input').value.trim().toLowerCase();
-<<<<<<< HEAD
   let list = currentFilter === 'trash' ? trashContacts : allContacts;
-=======
-  let list = allContacts;
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
   if (currentFilter === 'favorites') list = list.filter(c => c.is_favorite);
   else if (currentFilter === 'family')    list = list.filter(c => (c.tags || []).includes('Family'));
   else if (currentFilter === 'work')      list = list.filter(c => (c.tags || []).includes('Work'));
@@ -117,10 +89,7 @@ function render() {
   document.getElementById('badge-family').textContent  = allContacts.filter(c => (c.tags||[]).includes('Family')).length;
   document.getElementById('badge-work').textContent    = allContacts.filter(c => (c.tags||[]).includes('Work')).length;
   document.getElementById('badge-friends').textContent = allContacts.filter(c => (c.tags||[]).includes('Friends')).length;
-<<<<<<< HEAD
   if (document.getElementById('badge-trash')) document.getElementById('badge-trash').textContent = trashContacts.length;
-=======
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
 
   countEl.textContent = `${contacts.length} contact${contacts.length !== 1 ? 's' : ''}`;
 
@@ -172,7 +141,6 @@ function contactRowHtml(c, q) {
   const tags = (c.tags || []).map(t => `<span class="contact-tag">${t}</span>`).join('');
   const name  = highlight(esc(c.full_name), q);
   const phone = highlight(esc(c.phone_number || '—'), q);
-<<<<<<< HEAD
   
   let buttons = `<button class="row-delete" onclick="event.stopPropagation();confirmDelete(${c.contact_id})">Delete</button>`;
   if (currentFilter === 'trash') {
@@ -182,8 +150,6 @@ function contactRowHtml(c, q) {
     `;
   }
   
-=======
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
   return `
     <div class="contact-row" data-id="${c.contact_id}">
       <div class="contact-avatar" style="background:${col}">${avatar}${fav}</div>
@@ -192,11 +158,7 @@ function contactRowHtml(c, q) {
         <div class="contact-phone">${phone}</div>
         ${tags ? `<div class="contact-tags">${tags}</div>` : ''}
       </div>
-<<<<<<< HEAD
       <div style="display:flex; align-items:center;">${buttons}</div>
-=======
-      <button class="row-delete" onclick="event.stopPropagation();confirmDelete(${c.contact_id})">Delete</button>
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
       <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
     </div>`;
 }
@@ -210,7 +172,6 @@ function renderGrid(container, contacts, q) {
       : `<span>${ini}</span>`;
     const fav  = c.is_favorite ? `<div class="card-fav">★</div>` : '';
     const tags = (c.tags || []).map(t => `<span class="card-tag">${t}</span>`).join('');
-<<<<<<< HEAD
     
     let buttons = `<button class="card-del" onclick="event.stopPropagation();confirmDelete(${c.contact_id})">Delete</button>`;
     if (currentFilter === 'trash') {
@@ -222,19 +183,13 @@ function renderGrid(container, contacts, q) {
       `;
     }
     
-=======
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
     return `
       <div class="contact-card" data-id="${c.contact_id}">
         <div class="card-avatar" style="background:${col}">${avatar}${fav}</div>
         <div class="card-name">${highlight(esc(c.full_name), q)}</div>
         <div class="card-phone">${highlight(esc(c.phone_number || '—'), q)}</div>
         ${tags ? `<div class="card-tags">${tags}</div>` : ''}
-<<<<<<< HEAD
         ${buttons}
-=======
-        <button class="card-del" onclick="event.stopPropagation();confirmDelete(${c.contact_id})">Delete</button>
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
       </div>`;
   }).join('')}</div>`;
 }
@@ -357,7 +312,6 @@ async function doDelete(id) {
   } catch { showToast('Delete failed.', 'error'); }
 }
 
-<<<<<<< HEAD
 async function doRestore(id) {
   try {
     const res = await fetch(`/contacts/${id}/restore`, { method: 'POST' });
@@ -385,8 +339,6 @@ async function doForceDelete(id) {
   } catch { showToast('Delete failed.', 'error'); }
 }
 
-=======
->>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
 let toastT = null;
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
