@@ -277,6 +277,7 @@ def register_routes(app):
     def search_contacts():
         user_id = session["user_id"]
         q = request.args.get("q", "").strip()
+<<<<<<< HEAD
         status = request.args.get("status", "active").strip()
         
         status_cond = "deleted_at IS NOT NULL" if status == "trash" else "deleted_at IS NULL"
@@ -285,6 +286,13 @@ def register_routes(app):
             query = f"""
                 SELECT * FROM contacts
                 WHERE user_id = ? AND {status_cond}
+=======
+        db = get_db()
+        if q:
+            query = """
+                SELECT * FROM contacts
+                WHERE user_id = ? AND deleted_at IS NULL
+>>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
                 AND (name LIKE ? OR phone LIKE ? OR email LIKE ?)
                 ORDER BY name
             """
@@ -292,7 +300,11 @@ def register_routes(app):
             rows = db.execute(query, (user_id, like, like, like)).fetchall()
         else:
             rows = db.execute(
+<<<<<<< HEAD
                 f"SELECT * FROM contacts WHERE user_id = ? AND {status_cond} ORDER BY name",
+=======
+                "SELECT * FROM contacts WHERE user_id = ? AND deleted_at IS NULL ORDER BY name",
+>>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
                 (user_id,)
             ).fetchall()
         contacts = [dict(row) for row in rows]
@@ -316,6 +328,7 @@ def register_routes(app):
             (contact_id,)
         )
         db.commit()
+<<<<<<< HEAD
         return jsonify({"success": True})
 
     @app.route("/contacts/<int:contact_id>/restore", methods=["POST"])
@@ -351,4 +364,6 @@ def register_routes(app):
             
         db.execute("DELETE FROM contacts WHERE contact_id = ?", (contact_id,))
         db.commit()
+=======
+>>>>>>> 3167b0b335c0ebb801f3db7f1f5afee33ab12e03
         return jsonify({"success": True})
