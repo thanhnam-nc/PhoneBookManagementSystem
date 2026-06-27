@@ -58,9 +58,19 @@ def register_routes(app):
                 )
 
             conn = get_db()
-            existing = conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone()
-            if existing:
-                return render_page("auth/register.html", "Register", "Email already exists.", True)
+            existing_email = conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone()
+            existing_phone = None
+            if phone_number:
+                existing_phone = conn.execute("SELECT 1 FROM users WHERE phone_number = ?", (phone_number,)).fetchone()
+
+            if existing_email or existing_phone:
+                if existing_email and existing_phone:
+                    message = "Email and phone number already exist."
+                elif existing_email:
+                    message = "Email already exists."
+                else:
+                    message = "Phone number already exists."
+                return render_page("auth/register.html", "Register", message, True)
 
             password_hash = hash_password(password)
             answer_hash = hash_password(security_answer.lower())
