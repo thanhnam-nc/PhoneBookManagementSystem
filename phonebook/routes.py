@@ -147,6 +147,27 @@ def register_routes(app):
 
         return render_page("auth/reset_password.html", "Reset Password", None, False)
 
+    @app.route("/verify-security-info", methods=["POST"])
+    def verify_security_info():
+        data = request.get_json(silent=True) or {}
+        email = data.get("email", "").strip().lower()
+        security_question = data.get("security_question", "").strip()
+        security_answer = data.get("security_answer", "").strip().lower()
+
+        if not email or not security_question or not security_answer:
+            return {"valid": False, "message": "Please provide email, security question, and answer."}
+
+        conn = get_db()
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if not user:
+            return {"valid": False, "message": "No account found for that email."}
+        if security_question != user["security_question"]:
+            return {"valid": False, "message": "Security question does not match."}
+        if not verify_password(security_answer, user["security_answer_hash"]):
+            return {"valid": False, "message": "Security answer is incorrect."}
+
+        return {"valid": True}
+
     # Chuyển hướng sang dashboard phù hợp theo vai trò.
     @app.route("/dashboard")
     @login_required
