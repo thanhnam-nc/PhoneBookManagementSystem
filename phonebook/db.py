@@ -31,6 +31,35 @@ def init_db(db_path=None):
     if "last_login" not in existing_columns:
         conn.execute("ALTER TABLE users ADD COLUMN last_login TEXT")
 
+    # Clean up duplicate phone numbers before creating a unique index.
+    duplicate_phone_numbers = conn.execute(
+        """
+        SELECT phone_number
+        FROM users
+        WHERE phone_number IS NOT NULL AND phone_number != ''
+        GROUP BY phone_number
+        HAVING COUNT(*) > 1
+        """
+    ).fetchall()
+    for (phone_number,) in duplicate_phone_numbers:
+        keep_user = conn.execute(
+            "SELECT user_id FROM users WHERE phone_number = ? ORDER BY user_id",
+            (phone_number,),
+        ).fetchone()
+        if keep_user:
+            conn.execute(
+                "UPDATE users SET phone_number = NULL WHERE phone_number = ? AND user_id != ?",
+                (phone_number, keep_user[0]),
+            )
+
+    conn.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_number_unique
+        ON users(phone_number)
+        WHERE phone_number IS NOT NULL AND phone_number != ''
+        """
+    )
+
     admin_email = "admin@phonebook.com"
     admin_exists = conn.execute("SELECT 1 FROM users WHERE email = ?", (admin_email,)).fetchone()
     if not admin_exists:
