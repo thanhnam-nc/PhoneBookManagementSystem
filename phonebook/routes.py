@@ -356,7 +356,7 @@ def register_routes(app):
     @login_required
     def update_contact(contact_id):
         user_id = session["user_id"]
-        data = request.get_json()
+        data = request.get_json() or {}
         db = get_db()
         contact = db.execute(
             "SELECT * FROM contacts WHERE contact_id = ? AND user_id = ? AND deleted_at IS NULL",
@@ -365,12 +365,66 @@ def register_routes(app):
         if not contact:
             return jsonify({"error": "Contact not found"}), 404
 
-        favorite = data.get("favorite", contact["favorite"])
+        # Validate name
+        if "name" in data:
+            name = data["name"].strip()
+            if not name:
+                return jsonify({"success": False, "error": "Name is required"}), 400
+        else:
+            name = contact["name"]
+
+        # Validate phone
+        if "phone" in data:
+            phone = data["phone"].strip()
+            if not phone or not (9 <= len(phone) <= 11):
+                return jsonify({"success": False, "error": "Phone must be 9-11 digits"}), 400
+            
+            # Check duplicate phone for this user (excluding current contact)
+            existing_phone = db.execute(
+                "SELECT 1 FROM contacts WHERE user_id = ? AND phone = ? AND contact_id != ? AND deleted_at IS NULL",
+                (user_id, phone, contact_id)
+            ).fetchone()
+            if existing_phone:
+                return jsonify({"success": False, "error": "Phone number already exists"}), 400
+        else:
+            phone = contact["phone"]
+
+        # Validate email
+        if "email" in data:
+            email = data["email"].strip()
+            if email:
+                import re
+                if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+                    return jsonify({"success": False, "error": "Enter a valid email"}), 400
+                
+                # Check duplicate email for this user (excluding current contact)
+                existing_email = db.execute(
+                    "SELECT 1 FROM contacts WHERE user_id = ? AND email = ? AND contact_id != ? AND deleted_at IS NULL",
+                    (user_id, email, contact_id)
+                ).fetchone()
+                if existing_email:
+                    return jsonify({"success": False, "error": "Email already exists"}), 400
+        else:
+            email = contact["email"]
+
+        address = data.get("address", contact["address"])
+        if address is not None:
+            address = address.strip()
+
         category = data.get("category", contact["category"])
+        favorite = int(data.get("favorite", contact["favorite"]))
+        
+        notes = data.get("notes", contact["notes"])
+        if notes is not None:
+            notes = notes.strip()
 
         db.execute(
-            "UPDATE contacts SET favorite = ?, category = ? WHERE contact_id = ?",
-            (favorite, category, contact_id)
+            """
+            UPDATE contacts
+            SET name = ?, phone = ?, email = ?, address = ?, category = ?, favorite = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE contact_id = ?
+            """,
+            (name, phone, email, address, category, favorite, notes, contact_id)
         )
         db.commit()
         return jsonify({"success": True})

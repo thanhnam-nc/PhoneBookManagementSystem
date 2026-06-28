@@ -31,6 +31,7 @@ async function loadContacts(q = '') {
       full_name: c.name,
       phone_number: c.phone || '',
       email: c.email || '',
+      address: c.address || '',
       tags: c.category ? c.category.split(',').filter(Boolean) : [],
       is_favorite: c.favorite === 1,
       notes: c.notes || '',
@@ -228,7 +229,7 @@ function contactRowHtml(c, q) {
     `;
   }
   return `
-    <div class="contact-row" data-id="${c.contact_id}" onclick="openEditModal(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+    <div class="contact-row" data-id="${c.contact_id}" onclick="openDetailsModal(${JSON.stringify(c).replace(/"/g, '&quot;')})">
       <div class="contact-avatar" style="background:${col}">${avatar}${fav}</div>
       <div class="contact-info">
         <div class="contact-name">${name}</div>
@@ -259,7 +260,7 @@ function renderGrid(container, contacts, q) {
       `;
     }
     return `
-      <div class="contact-card" data-id="${c.contact_id}">
+      <div class="contact-card" data-id="${c.contact_id}" onclick="openDetailsModal(${JSON.stringify(c).replace(/"/g, '&quot;')})">
         <div class="card-avatar" style="background:${col}">${avatar}${fav}</div>
         <div class="card-name">${highlight(esc(c.full_name), q)}</div>
         <div class="card-phone">${highlight(esc(c.phone_number || '—'), q)}</div>
@@ -326,6 +327,7 @@ async function submitContact() {
   const full_name = document.getElementById('f-name').value.trim();
   const phone_number = document.getElementById('f-phone').value.trim();
   const email = document.getElementById('f-email').value.trim();
+  const address = document.getElementById('f-address').value.trim();
   const notes = document.getElementById('f-notes').value.trim();
   const selectedChips = [...document.querySelectorAll('.chip.selected')];
   const category = selectedChips.filter(c => c.dataset.cat !== 'Favorites').map(c => c.dataset.cat).join(',');
@@ -341,6 +343,7 @@ async function submitContact() {
   formData.append('name', full_name);
   formData.append('phone', phone_number);
   formData.append('email', email);
+  formData.append('address', address);
   formData.append('notes', notes);
   formData.append('category', category);
   formData.append('favorite', isFav ? '1' : '0');
@@ -367,11 +370,17 @@ function showFormError(msg) {
 }
 
 function resetForm() {
-  ['f-name','f-phone','f-email','f-notes','pic-url'].forEach(id => {
-    document.getElementById(id).value = '';
-    document.getElementById(id).classList.remove('error');
+  ['f-name','f-phone','f-email','f-address','f-notes','pic-url'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = '';
+      el.classList.remove('error');
+    }
   });
-  ['err-name','err-phone','err-email'].forEach(id => document.getElementById(id).textContent = '');
+  ['err-name','err-phone','err-email'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
   document.getElementById('form-error').style.display = 'none';
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
   previewPhoto('');
@@ -438,6 +447,7 @@ function openEditModal(c) {
   document.getElementById('edit-name').value = c.full_name;
   document.getElementById('edit-phone').value = c.phone_number;
   document.getElementById('edit-email').value = c.email;
+  document.getElementById('edit-address').value = c.address || '';
   document.getElementById('edit-notes').value = c.notes;
   document.getElementById('edit-fav').checked = c.is_favorite;
   document.getElementById('edit-err-name').textContent = '';
@@ -474,6 +484,7 @@ async function submitEdit() {
   const name = document.getElementById('edit-name').value.trim();
   const phone = document.getElementById('edit-phone').value.trim();
   const email = document.getElementById('edit-email').value.trim();
+  const address = document.getElementById('edit-address').value.trim();
   const notes = document.getElementById('edit-notes').value.trim();
   const favorite = document.getElementById('edit-fav').checked ? 1 : 0;
   const category = [...document.querySelectorAll('#edit-chips .chip.selected')]
@@ -486,7 +497,7 @@ async function submitEdit() {
     const res = await fetch(`/contacts/${id}/update`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, email, notes, favorite, category })
+      body: JSON.stringify({ name, phone, email, address, notes, favorite, category })
     });
     const data = await res.json();
     if (data.success) {
@@ -510,6 +521,98 @@ function showToast(msg, type = '') {
   void t.offsetWidth; t.classList.add('show');
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ── View Details Modal ── */
+function openDetailsModal(c) {
+  const col = avatarColor(c.full_name);
+  const ini = initials(c.full_name);
+  
+  const avatarEl = document.getElementById('details-avatar');
+  avatarEl.style.background = col;
+  avatarEl.innerHTML = c.profile_picture_url
+    ? `<img src="${esc(c.profile_picture_url)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="" onerror="this.parentElement.innerHTML='<span>${ini}</span>'" />`
+    : `<span>${ini}</span>`;
+    
+  document.getElementById('details-name').textContent = c.full_name;
+  
+  const favBadge = document.getElementById('details-fav-badge');
+  if (c.is_favorite) {
+    favBadge.style.display = 'inline-flex';
+  } else {
+    favBadge.style.display = 'none';
+  }
+  
+  document.getElementById('details-phone').textContent = c.phone_number || '—';
+  document.getElementById('details-email').textContent = c.email || '—';
+  document.getElementById('details-address').textContent = c.address || '—';
+  
+  // Render tags
+  const tagsContainer = document.getElementById('details-categories');
+  tagsContainer.innerHTML = '';
+  if (c.tags && c.tags.length > 0) {
+    c.tags.forEach(t => {
+      const span = document.createElement('span');
+      span.className = 'contact-tag';
+      span.style.cssText = 'background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500;';
+      span.textContent = t;
+      tagsContainer.appendChild(span);
+    });
+  } else {
+    tagsContainer.textContent = '—';
+  }
+  
+  document.getElementById('details-notes').textContent = c.notes || '—';
+  
+  // Set up action buttons
+  const deleteBtn = document.getElementById('details-delete-btn');
+  const editBtn = document.getElementById('details-edit-btn');
+  
+  if (c.deleted_at) {
+    // Contact is in trash
+    editBtn.textContent = 'Restore';
+    editBtn.className = 'btn-save';
+    editBtn.style.background = '#10b981';
+    editBtn.style.borderColor = '#10b981';
+    editBtn.onclick = () => {
+      closeDetailsModal();
+      doRestore(c.contact_id);
+    };
+    
+    deleteBtn.textContent = 'Delete Permanently';
+    deleteBtn.onclick = () => {
+      closeDetailsModal();
+      confirmForceDelete(c.contact_id);
+    };
+  } else {
+    // Normal contact
+    editBtn.textContent = 'Edit Contact';
+    editBtn.className = 'btn-save';
+    editBtn.style.background = '';
+    editBtn.style.borderColor = '';
+    editBtn.onclick = () => {
+      closeDetailsModal();
+      openEditModal(c);
+    };
+    
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => {
+      closeDetailsModal();
+      confirmDelete(c.contact_id);
+    };
+  }
+  
+  document.getElementById('details-overlay').classList.add('open');
+}
+
+function closeDetailsModal() {
+  document.getElementById('details-overlay').classList.remove('open');
+}
+
+function closeDetailsModalOutside(e) {
+  if (e.target === document.getElementById('details-overlay')) {
+    closeDetailsModal();
+  }
 }
 
 function esc(s) {
