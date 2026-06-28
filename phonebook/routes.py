@@ -233,7 +233,7 @@ def register_routes(app):
         email = request.form.get("email", "").strip()
         address = request.form.get("address", "").strip()
         category = request.form.get("category", "").strip()
-        favorite = 1 if request.form.get("favorite") else 0
+        favorite = 1 if request.form.get("favorite") == "1" else 0
         notes = request.form.get("notes", "").strip()
 
         # Validate cơ bản
@@ -350,5 +350,71 @@ def register_routes(app):
             return jsonify({"error": "Contact not found in trash"}), 404
             
         db.execute("DELETE FROM contacts WHERE contact_id = ?", (contact_id,))
+        db.commit()
+        return jsonify({"success": True})
+    @app.route("/contacts/<int:contact_id>/update", methods=["POST"])
+    @login_required
+    def update_contact(contact_id):
+        user_id = session["user_id"]
+        data = request.get_json()
+        db = get_db()
+        contact = db.execute(
+            "SELECT * FROM contacts WHERE contact_id = ? AND user_id = ? AND deleted_at IS NULL",
+            (contact_id, user_id)
+        ).fetchone()
+        if not contact:
+            return jsonify({"error": "Contact not found"}), 404
+
+        favorite = data.get("favorite", contact["favorite"])
+        category = data.get("category", contact["category"])
+
+        db.execute(
+            "UPDATE contacts SET favorite = ?, category = ? WHERE contact_id = ?",
+            (favorite, category, contact_id)
+        )
+        db.commit()
+        return jsonify({"success": True})
+    @app.route("/api/categories", methods=["GET"])
+    @login_required
+    def get_categories():
+        user_id = session["user_id"]
+        db = get_db()
+        rows = db.execute(
+            "SELECT * FROM categories WHERE user_id = ? ORDER BY name",
+            (user_id,)
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+
+    @app.route("/api/categories", methods=["POST"])
+    @login_required
+    def create_category():
+        user_id = session["user_id"]
+        data = request.get_json()
+        name = data.get("name", "").strip()
+        if not name:
+            return jsonify({"success": False, "error": "Name is required."})
+        db = get_db()
+        existing = db.execute(
+            "SELECT 1 FROM categories WHERE user_id = ? AND name = ?",
+            (user_id, name)
+        ).fetchone()
+        if existing:
+            return jsonify({"success": False, "error": "Already exists."})
+        db.execute(
+            "INSERT INTO categories (user_id, name) VALUES (?, ?)",
+            (user_id, name)
+        )
+        db.commit()
+        return jsonify({"success": True})
+
+    @app.route("/api/categories/<int:cat_id>", methods=["DELETE"])
+    @login_required
+    def delete_category(cat_id):
+        user_id = session["user_id"]
+        db = get_db()
+        db.execute(
+            "DELETE FROM categories WHERE category_id = ? AND user_id = ?",
+            (cat_id, user_id)
+        )
         db.commit()
         return jsonify({"success": True})

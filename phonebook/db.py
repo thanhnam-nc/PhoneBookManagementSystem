@@ -6,7 +6,6 @@ from flask import current_app, g
 from .config import DEFAULT_DB
 
 
-# Tạo bảng users nếu chưa tồn tại trong database và thêm cột còn thiếu cho schema cũ.
 def init_db(db_path=None):
     database_path = db_path or current_app.config.get("DATABASE", DEFAULT_DB) if current_app else DEFAULT_DB
     conn = sqlite3.connect(database_path)
@@ -31,7 +30,6 @@ def init_db(db_path=None):
     if "last_login" not in existing_columns:
         conn.execute("ALTER TABLE users ADD COLUMN last_login TEXT")
 
-    # Clean up duplicate phone numbers before creating a unique index.
     duplicate_phone_numbers = conn.execute(
         """
         SELECT phone_number
@@ -71,7 +69,7 @@ def init_db(db_path=None):
             """,
             (admin_email, "0000000000", password_hash, "What is the admin password?", bcrypt.hashpw(b"admin", bcrypt.gensalt()).decode("utf-8"), "admin", "2026-06-25 00:00:00"),
         )
-    # Tạo bảng contacts
+
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS contacts (
@@ -95,15 +93,25 @@ def init_db(db_path=None):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_contacts_name ON contacts(name)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_contacts_phone ON contacts(phone)")
 
-    # Thêm cột notes nếu bảng đã tồn tại (cho lần chạy sau)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS categories (
+            category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
+        )
+        """
+    )
+
     existing_columns_contacts = {row[1] for row in conn.execute("PRAGMA table_info(contacts)")}
     if "notes" not in existing_columns_contacts:
         conn.execute("ALTER TABLE contacts ADD COLUMN notes TEXT")
+
     conn.commit()
     conn.close()
 
 
-# Lấy kết nối database cho mỗi request.
 def get_db():
     if "db" not in g:
         conn = sqlite3.connect(current_app.config["DATABASE"])
@@ -112,7 +120,6 @@ def get_db():
     return g.db
 
 
-# Đóng kết nối sau khi request kết thúc.
 def close_db(exc):
     db = g.pop("db", None)
     if db is not None:
