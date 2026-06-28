@@ -44,6 +44,9 @@ def register_routes(app):
     # Đăng ký tài khoản mới.
     @app.route("/register", methods=["GET", "POST"])
     def register():
+        if "user_id" in session:
+            return redirect(url_for("dashboard"))
+
         if request.method == "POST":
             email = request.form.get("email", "").strip().lower()
             phone_number = request.form.get("phone_number", "").strip()
@@ -90,6 +93,7 @@ def register_routes(app):
                 ),
             )
             conn.commit()
+            session.clear()
             return redirect(url_for("login", message="Registration successful. Please log in.", error=False))
 
         return render_page("auth/register.html", "Register", None, False)
@@ -97,6 +101,9 @@ def register_routes(app):
     # Đăng nhập và tạo session cho user.
     @app.route("/login", methods=["GET", "POST"])
     def login():
+        if "user_id" in session:
+            return redirect(url_for("dashboard"))
+
         message = request.args.get("message")
         error = request.args.get("error", "false").lower() in {"1", "true", "yes"}
 
