@@ -74,34 +74,12 @@
     <div style="display:flex;gap:6px;">
       <input id="new-cat-input" class="input" type="text"
         placeholder="New category..."
-        style="font-size:12px;padding:6px 10px;"
+        style="font-size:12px;padding:6px 10px;background:#252638;border:1px solid #3a3d57;color:#f3f4f6;"
         onkeydown="if(event.key==='Enter') createCategory()" />
       <button onclick="createCategory()"
-        style="background:#6366f1;color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;font-weight:700;">+</button>
+        style="background:#5c5fef;color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;font-weight:700;">+</button>
     </div>
   </div>
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-      </svg>
-      Family
-      <span class="nav-badge" id="badge-family">0</span>
-    </a>
-    <a class="nav-item" id="nav-work" onclick="filterView('work')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-      </svg>
-      Work
-      <span class="nav-badge" id="badge-work">0</span>
-    </a>
-    <a class="nav-item" id="nav-friends" onclick="filterView('friends')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-      Friends
-      <span class="nav-badge" id="badge-friends">0</span>
-    </a>
-  </nav>
 
   <div class="sidebar-section-label">SYSTEM</div>
   <nav class="sidebar-nav">
