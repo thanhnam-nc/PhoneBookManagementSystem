@@ -837,9 +837,32 @@ def register_routes(app):
     def delete_category(cat_id):
         user_id = session["user_id"]
         db = get_db()
+        category = db.execute(
+            "SELECT name FROM categories WHERE category_id = ? AND user_id = ?",
+            (cat_id, user_id)
+        ).fetchone()
+        if not category:
+            return jsonify({"success": False, "error": "Category not found."}), 404
+
+        category_name = category["name"]
         db.execute(
             "DELETE FROM categories WHERE category_id = ? AND user_id = ?",
             (cat_id, user_id)
         )
+
+        contacts = db.execute(
+            "SELECT contact_id, category FROM contacts WHERE user_id = ? AND category IS NOT NULL AND category != ''",
+            (user_id,)
+        ).fetchall()
+        for contact in contacts:
+            tags = [t.strip() for t in contact["category"].split(",") if t.strip()]
+            filtered = [t for t in tags if t != category_name]
+            if len(filtered) != len(tags):
+                new_value = ",".join(filtered)
+                db.execute(
+                    "UPDATE contacts SET category = ? WHERE contact_id = ?",
+                    (new_value, contact["contact_id"])
+                )
+
         db.commit()
         return jsonify({"success": True})

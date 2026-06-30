@@ -5,6 +5,7 @@ let currentFilter = 'all';
 let currentView = 'list';
 let searchTimer = null;
 let pendingDeleteId = null;
+let pendingCategoryDeleteId = null;
 let customCategories = [];
 
 const COLORS = ['#f97316','#8b5cf6','#ec4899','#06b6d4','#10b981','#f59e0b','#6366f1','#ef4444','#14b8a6','#84cc16'];
@@ -110,12 +111,35 @@ async function createCategory() {
 }
 
 async function deleteCategory(id) {
-  if (!confirm('Delete this category?')) return;
-  await fetch(`/api/categories/${id}`, { method: 'DELETE' });
-  if (currentFilter === `cat_${id}`) currentFilter = 'all';
-  await loadCategories();
-  await loadContacts();
-  showToast('Category deleted.', 'success');
+  pendingCategoryDeleteId = id;
+  document.getElementById('category-delete-overlay').classList.add('open');
+}
+
+async function confirmDeleteCategory() {
+  const id = pendingCategoryDeleteId;
+  closeCategoryDeleteModal();
+  if (!id) return;
+  try {
+    const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Delete failed');
+    if (currentFilter === `cat_${id}`) currentFilter = 'all';
+    await loadCategories();
+    await loadContacts();
+    showToast('Category deleted.', 'success');
+  } catch {
+    showToast('Failed to delete category.', 'error');
+  } finally {
+    pendingCategoryDeleteId = null;
+  }
+}
+
+function closeCategoryDeleteModal() {
+  document.getElementById('category-delete-overlay').classList.remove('open');
+  pendingCategoryDeleteId = null;
+}
+
+function closeCategoryDeleteOutside(e) {
+  if (e.target === document.getElementById('category-delete-overlay')) closeCategoryDeleteModal();
 }
 
 /* ── Filter ── */
