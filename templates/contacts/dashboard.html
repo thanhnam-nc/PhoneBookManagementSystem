@@ -313,6 +313,25 @@
   </div>
 </div>
 
+<!-- ═══════════════ CATEGORY DELETE CONFIRM MODAL ═══════════════ -->
+<div class="modal-overlay" id="category-delete-overlay" onclick="closeCategoryDeleteOutside(event)">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Delete Category?</h2>
+      <button class="modal-close" onclick="closeCategoryDeleteModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#6b7280;font-size:14px">Deleting this category will remove it from the sidebar. Contacts will stay, but the category label will no longer be available.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeCategoryDeleteModal()">Cancel</button>
+      <button class="btn-danger" id="category-delete-confirm-btn" onclick="confirmCategoryDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
