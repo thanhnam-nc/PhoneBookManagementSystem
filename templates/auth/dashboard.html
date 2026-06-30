@@ -1,0 +1,14 @@
+{% extends 'auth/base.html' %}
+{% block content %}
+<!-- Simple dashboard shown after a successful login -->
+<div class="dashboard">
+  <h1>{{ page_title or 'Dashboard' }}</h1>
+  <p>{% if page_title == 'Admin Dashboard' %}You are logged in as an administrator.{% else %}You are logged in as a regular user.{% endif %}</p>
+  <!-- Role-based message for admin or regular user -->
+  <div class="panel">
+    <strong>{% if page_title == 'Admin Dashboard' %}Admin Dashboard{% else %}User Dashboard{% endif %}</strong>
+    <p>Your account is protected with encrypted credentials and a reset flow.</p>
+  </div>
+  <a href="{{ url_for('logout') }}"><button type="button">Logout</button></a>
+</div>
+{% endblock %}

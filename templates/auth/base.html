@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    /* Base page styling for all auth screens */
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: #f4f5f8;
+      color: #111827;
+      min-height: 100vh;
+    }
+    /* Split layout with left promo area and right form area */
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      background: #f4f5f8;
+    }
+    .auth-sidebar {
+      width: 480px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px;
+      background: #1e2537;
+      color: white;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-title {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .hero-title span { color: #818cf8; }
+    .hero-desc {
+      color: #94a3b8;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .feature-list { display: grid; gap: 14px; margin-top: 28px; }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(79, 70, 229, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #818cf8;
+      flex-shrink: 0;
+    }
+    /* Center the form card on the right side */
+    .auth-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    /* Main card styling used by login, register, and reset pages */
+     .auth-card {
+      width: min(100%, 460px);
+      background: white;
+      border: 1px solid #eceef3;
+      border-radius: 24px;
+      padding: 28px 26px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .auth-mobile-brand {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      font-weight: 600;
+      color: #1e2537;
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; color: #111827; }
+    p { margin: 0; color: #6b7280; line-height: 1.5; }
+    .message {
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      background: #ecfdf3;
+      color: #166534;
+      border: 1px solid #a7f3d0;
+      font-size: 14px;
+    }
+    .message.error {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    /* Form layout and spacing for input groups */
+    .auth-form { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    
+    /* Single input field block */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field-row .field { min-width: 0; }
+    label { font-size: 12.5px; font-weight: 600; color: #374151; }
+    .input-wrap { position: relative; }
+    .input-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+    input,
+    select {
+      width: 100%;
+      padding: 11px 12px 11px 40px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      color: #111827;
+      font-size: 14px;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+    select {
+      background-image: none;
+      background-color: #f9fafb;
+    }
+    input:focus,
+    select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16); }
+    .password-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      padding: 0;
+    }
+    .password-toggle:hover {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+    button.primary {
+      padding: 13px 16px;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .reset-title {
+      font-size: 22px;
+      line-height: 1.2;
+      margin: 0 0 3px;
+    }
+    .reset-subtitle {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #6b7280;
+      margin: 0;
+    }
+    button.primary:hover { background: #4338ca; }
+    .helper-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-top: 2px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .helper-row a { color: #4f46e5; text-decoration: none; }
+    /* Header for the multi-step reset password flow */
+    .reset-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 36px;
+    }
+    .reset-back-btn {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #374151;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .reset-back-btn:hover { background: #e5e7eb; }
+    /* Step progress bar for the reset wizard */
+    .step-indicators {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .step-indicator {
+      height: 6px;
+      flex: 1;
+      border-radius: 999px;
+      background: #e5e7eb;
+      transition: background 0.2s ease;
+    }
+    .step-indicator.active { background: #4f46e5; }
+    .step-panel { display: none; width: 100%; }
+    .step-panel.active {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .step-panel .field {
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 0;
+    }
+    .step-panel .input-wrap {
+      width: 100%;
+      display: block;
+    }
+    .step-panel input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .step-panel .primary {
+      width: 100%;
+      display: block;
+      margin-top: 2px;
+    }
+    .demo-box {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      font-size: 12px;
+      color: #4338ca;
+    }
+    .demo-box strong { display: block; margin-bottom: 4px; }
+    .security-note {
+      margin-top: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .footer-link {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .footer-link a { color: #4f46e5; text-decoration: none; font-weight: 600; }
+    .dashboard { display: grid; gap: 14px; }
+    .panel { background: rgba(255,255,255,0.08); padding: 16px; border-radius: 14px; }
+    @media (max-width: 1024px) {
+      .auth-sidebar { display: none; }
+      .auth-main { padding: 20px; }
+      .auth-mobile-brand { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  {% block content %}{% endblock %}
+</body>
+</html>

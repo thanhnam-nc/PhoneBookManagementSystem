@@ -1,0 +1,181 @@
+{% extends 'auth/base.html' %}
+{% block content %}
+<div class="auth-page">
+  <!-- Left intro panel for the app branding -->
+  <aside class="auth-sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16v16H4z"/>
+          <path d="M8 8h8"/>
+          <path d="M8 12h8"/>
+          <path d="M8 16h5"/>
+        </svg>
+      </div>
+      <span>PhoneBook Pro</span>
+    </div>
+
+    <div>
+      <div class="hero-title">Manage your contacts<br><span>smarter than ever.</span></div>
+      <p class="hero-desc">A secure, feature-rich contact management system with private workspaces, instant search, smart categories, and powerful admin controls.</p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3l7 4v5c0 4.2-2.8 7.8-7 9-4.2-1.2-7-4.8-7-9V7l7-4z"/>
+            </svg>
+          </div>
+          <span>End-to-end data isolation per user</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.9A4 4 0 0 0 18 14h-1.3"/>
+              <path d="M5 14H4a4 4 0 0 0-4 4"/>
+              <path d="M7 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+              <path d="M17 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+            </svg>
+          </div>
+          <span>Quick-dial with device native dialer</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-3-3.9"/>
+              <path d="M4 21v-2a4 4 0 0 1 3-3.9"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <span>Custom categories & favorites</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size: 12px; color: #64748b;">© 2025 PhoneBook Pro · v1.1.0</p>
+  </aside>
+
+  <!-- Main area containing the registration form -->
+  <main class="auth-main">
+    <div class="auth-card">
+      <div class="auth-mobile-brand">
+        <div class="brand-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16v16H4z"/>
+            <path d="M8 8h8"/>
+            <path d="M8 12h8"/>
+            <path d="M8 16h5"/>
+          </svg>
+        </div>
+        <span>PhoneBook Pro</span>
+      </div>
+
+      <h1>Create account</h1>
+      <p>Register to manage your contacts securely.</p>
+
+      {% if message %}
+        <div class="message {{ 'error' if error else '' }}">{{ message }}</div>
+      {% endif %}
+
+      <!-- Account registration form -->
+      <form method="post" class="auth-form">
+        <!-- Name and phone fields -->
+        <div class="field-row">
+          <div class="field">
+            <label for="full_name">Full name</label>
+            <div class="input-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input id="full_name" name="full_name" type="text" placeholder="Jane Doe">
+            </div>
+          </div>
+          <div class="field">
+            <label for="phone_number">Phone</label>
+            <div class="input-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <input id="phone_number" name="phone_number" type="tel" placeholder="0901234567">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <div class="input-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 5h16v14H4z"/>
+              <path d="m4 7 8 6 8-6"/>
+            </svg>
+            <input id="email" name="email" type="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="10" width="16" height="10" rx="2"/>
+                <path d="M8 10V7a4 4 0 1 1 8 0v3"/>
+              </svg>
+              <input id="password" name="password" type="password" placeholder="••••••••" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="confirm_password">Confirm</label>
+            <div class="input-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="10" width="16" height="10" rx="2"/>
+                <path d="M8 10V7a4 4 0 1 1 8 0v3"/>
+              </svg>
+              <input id="confirm_password" name="confirm_password" type="password" placeholder="••••••••" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security recovery fields -->
+        <div class="field">
+          <label for="security_question">Security question</label>
+          <div class="input-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3"/>
+              <path d="M12 17h.01"/>
+            </svg>
+            <select id="security_question" name="security_question" required>
+              <option value="" disabled selected>Select a security question</option>
+              <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+              <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+              <option value="What was the name of your elementary school?">What was the name of your elementary school?</option>
+              <option value="What is your favorite book?">What is your favorite book?</option>
+              <option value="What city were you born in?">What city were you born in?</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="security_answer">Answer</label>
+          <div class="input-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3"/>
+              <path d="M12 17h.01"/>  
+            </svg>
+            <input id="security_answer" name="security_answer" type="text" placeholder="Your answer" required>
+          </div>
+        </div>
+
+        <button type="submit" class="primary">Create Account</button>
+      </form>
+
+      <div class="helper-row" style="margin-top: 14px;">
+        <a href="{{ url_for('login') }}">Already have an account?</a>
+        <a href="{{ url_for('reset_password') }}">Forgot password?</a>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

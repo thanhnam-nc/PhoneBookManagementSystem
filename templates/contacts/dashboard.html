@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhoneBook Pro</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <rect x="2" y="3" width="20" height="18" rx="3"/>
+        <path d="M8 7h8M8 11h8M8 15h5"/>
+      </svg>
+    </div>
+    <span class="brand-name">PhoneBook Pro</span>
+  </div>
+
+  <div class="sidebar-section-label">CONTACTS</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" id="nav-all" onclick="filterView('all')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      All Contacts
+      <span class="nav-badge" id="badge-all">0</span>
+    </a>
+    <a class="nav-item" id="nav-fav" onclick="filterView('favorites')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+      Favorites
+      <span class="nav-badge" id="badge-fav">0</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-section-label">CATEGORIES</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" id="nav-family" onclick="filterView('family')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      </svg>
+      Family
+      <span class="nav-badge" id="badge-family">0</span>
+    </a>
+    <a class="nav-item" id="nav-work" onclick="filterView('work')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+      </svg>
+      Work
+      <span class="nav-badge" id="badge-work">0</span>
+    </a>
+    <a class="nav-item" id="nav-friends" onclick="filterView('friends')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Friends
+      <span class="nav-badge" id="badge-friends">0</span>
+    </a>
+  </nav>
+
+  <!-- Custom categories -->
+  <div id="custom-categories-nav"></div>
+
+  <!-- Add category -->
+  <div style="padding:6px 16px 8px;">
+    <div style="display:flex;gap:6px;">
+      <input id="new-cat-input" class="input" type="text"
+        placeholder="New category..."
+        style="font-size:12px;padding:6px 10px;background:#252638;border:1px solid #3a3d57;color:#f3f4f6;"
+        onkeydown="if(event.key==='Enter') createCategory()" />
+      <button onclick="createCategory()"
+        style="background:#5c5fef;color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;font-weight:700;">+</button>
+    </div>
+  </div>
+
+  <div class="sidebar-section-label">SYSTEM</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" id="nav-trash" onclick="filterView('trash')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      Trash
+      <span class="nav-badge" id="badge-trash">0</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar">{{ user_email[0] | upper }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ user_email | truncate(15, True, "...") }}</span>
+        <span class="user-email">{{ user_email }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nút Logout mở modal xác nhận -->
+  <div style="margin-top: 12px; padding: 0 8px;">
+    <button onclick="openLogoutModal()" style="
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: Inter, sans-serif;
+    " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+      Logout
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 class="page-title" id="page-title">All Contacts</h1>
+      <span class="page-count" id="page-count">0 contacts</span>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input id="search-input" class="search-input" type="text"
+          placeholder="Search by name or phone..."
+          autocomplete="off" oninput="handleSearch(this.value)" />
+        <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none">✕</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-list" onclick="setView('list')" title="List view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </button>
+        <button class="view-btn" id="btn-grid" onclick="setView('grid')" title="Grid view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+      </div>
+      <button class="btn-add" onclick="openModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Add
+      </button>
+    </div>
+  </div>
+
+  <!-- Contact list -->
+  <div id="contacts-container" class="contacts-list"></div>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div class="empty-icon">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </div>
+    <p class="empty-title" id="empty-title">No contacts yet</p>
+    <p class="empty-sub" id="empty-sub">Click "+ Add" to create your first contact.</p>
+  </div>
+</main>
+
+<!-- ═══════════════ LOGOUT CONFIRM MODAL ═══════════════ -->
+<div class="modal-overlay" id="logout-overlay" onclick="closeLogoutModalOutside(event)">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Confirm Logout</h2>
+      <button class="modal-close" onclick="closeLogoutModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#374151;font-size:15px;text-align:center;margin:8px 0 4px;">
+        Are you sure you want to logout?
+      </p>
+    </div>
+    <div class="modal-footer" style="justify-content:center; gap:12px;">
+      <button class="btn-cancel" onclick="closeLogoutModal()" style="min-width:80px;">No</button>
+      <button class="btn-danger" id="logout-confirm-btn" onclick="confirmLogout()" style="min-width:80px;">Yes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CREATE CONTACT MODAL ═══════════════ -->
+<div class="modal-overlay" id="create-overlay" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title">New Contact</h2>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Photo -->
+      <div class="photo-section">
+        <div class="photo-preview" id="photo-preview">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>Photo</span>
+        </div>
+        <p class="photo-hint">Max 5 MB</p>
+        <input id="pic-url" type="url" class="input" placeholder="Or paste image URL (optional)"
+               oninput="previewPhoto(this.value)" style="margin-top:8px;font-size:12px" />
+      </div>
+
+      <!-- Fields -->
+      <div class="field-group">
+        <label class="field-label">Full Name <span class="required">*</span></label>
+        <input id="f-name" class="input" type="text" placeholder="John Doe" />
+        <p class="field-error" id="err-name"></p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Phone Number <span class="required">*</span></label>
+        <input id="f-phone" class="input" type="tel" placeholder="09xxxxxxxx (9–11 digits)" />
+        <p class="field-hint">9–11 digits required</p>
+        <p class="field-error" id="err-phone"></p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input id="f-email" class="input" type="email" placeholder="example@gmail.com" />
+        <p class="field-error" id="err-email"></p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Address</label>
+        <input id="f-address" class="input" type="text" placeholder="123 Main St, City" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Categories</label>
+        <div class="category-chips">
+          <button class="chip" data-cat="Family" onclick="toggleChip(this)">Family</button>
+          <button class="chip" data-cat="Work" onclick="toggleChip(this)">Work</button>
+          <button class="chip" data-cat="Friends" onclick="toggleChip(this)">Friends</button>
+          <button class="chip" data-cat="Favorites" onclick="toggleChip(this)">Favorites</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Notes</label>
+        <textarea id="f-notes" class="input textarea" placeholder="Additional notes..." rows="3"></textarea>
+      </div>
+
+      <div class="alert-error" id="form-error" style="display:none"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="submitContact()">Add Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FORCE DELETE CONFIRM MODAL ═══════════════ -->
+<div class="modal-overlay" id="force-delete-overlay" onclick="closeForceDeleteOutside(event)">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Delete Permanently?</h2>
+      <button class="modal-close" onclick="closeForceDeleteModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#6b7280;font-size:14px">This contact will be permanently deleted and cannot be recovered.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeForceDeleteModal()">Cancel</button>
+      <button class="btn-danger" id="force-delete-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DELETE CONFIRM MODAL ═══════════════ -->
+<div class="modal-overlay" id="delete-overlay" onclick="closeDeleteOutside(event)">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Delete Contact?</h2>
+      <button class="modal-close" onclick="closeDeleteModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#6b7280;font-size:14px">This contact will be moved to Trash. You can restore it later.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-danger" id="delete-confirm-btn">Move to Trash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}?v=2"></script>
+<script>
+  // Logout Modal
+  function openLogoutModal() {
+    document.getElementById('logout-overlay').classList.add('open');
+  }
+  function closeLogoutModal() {
+    document.getElementById('logout-overlay').classList.remove('open');
+  }
+  function closeLogoutModalOutside(e) {
+    if (e.target === document.getElementById('logout-overlay')) closeLogoutModal();
+  }
+  function confirmLogout() {
+    window.location.href = "{{ url_for('logout') }}";
+  }
+</script>
+<!-- EDIT CONTACT MODAL -->
+<div class="modal-overlay" id="edit-overlay" onclick="closeEditModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Contact</h2>
+      <button class="modal-close" onclick="closeEditModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id" />
+      <div class="field-group">
+        <label class="field-label">Full Name <span class="required">*</span></label>
+        <input id="edit-name" class="input" type="text" />
+        <p class="field-error" id="edit-err-name"></p>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Phone Number <span class="required">*</span></label>
+        <input id="edit-phone" class="input" type="tel" />
+        <p class="field-error" id="edit-err-phone"></p>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input id="edit-email" class="input" type="email" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Address</label>
+        <input id="edit-address" class="input" type="text" placeholder="123 Main St, City" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Category</label>
+        <div class="category-chips" id="edit-chips">
+          <button class="chip" data-cat="Family" onclick="toggleEditChip(this)">Family</button>
+          <button class="chip" data-cat="Work" onclick="toggleEditChip(this)">Work</button>
+          <button class="chip" data-cat="Friends" onclick="toggleEditChip(this)">Friends</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Favorite</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="edit-fav" style="width:16px;height:16px;" />
+          <span style="font-size:13px;color:#6b7280;">Mark as favorite</span>
+        </label>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Notes</label>
+        <textarea id="edit-notes" class="input textarea" rows="3"></textarea>
+      </div>
+      <div class="alert-error" id="edit-form-error" style="display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" onclick="submitEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ VIEW CONTACT DETAILS MODAL ═══════════════ -->
+<div class="modal-overlay" id="details-overlay" onclick="closeDetailsModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+      <h2 class="modal-title">Contact Details</h2>
+      <button class="modal-close" onclick="closeDetailsModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    
+    <div class="modal-body" style="gap: 20px;">
+      <!-- Hero Avatar & Name -->
+      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 12px 0;">
+        <div id="details-avatar" style="width: 80px; height: 80px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 28px; color: #fff; position: relative;">
+          <!-- Avatar character or img -->
+        </div>
+        <h3 id="details-name" style="font-size: 20px; font-weight: 700; color: var(--text); margin-top: 4px;"></h3>
+        <div id="details-fav-badge" style="display: none; background: #fef3c7; color: #d97706; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; align-items: center; gap: 4px; width: fit-content;">
+          ★ Favorite
+        </div>
+      </div>
+      
+      <!-- Detailed Information Grid -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #f3f4f6;">
+          <div style="color: var(--text-m); margin-top: 2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-m); font-weight: 500;">PHONE</div>
+            <div id="details-phone" style="font-size: 14px; font-weight: 600; color: var(--text);"></div>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #f3f4f6;">
+          <div style="color: var(--text-m); margin-top: 2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-m); font-weight: 500;">EMAIL</div>
+            <div id="details-email" style="font-size: 14px; color: var(--text);"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #f3f4f6;">
+          <div style="color: var(--text-m); margin-top: 2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-m); font-weight: 500;">ADDRESS</div>
+            <div id="details-address" style="font-size: 14px; color: var(--text);"></div>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #f3f4f6;">
+          <div style="color: var(--text-m); margin-top: 2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-m); font-weight: 500;">CATEGORIES</div>
+            <div id="details-categories" style="display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap;"></div>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="color: var(--text-m); margin-top: 2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-m); font-weight: 500;">NOTES</div>
+            <div id="details-notes" style="font-size: 13px; color: var(--text-2); white-space: pre-wrap; margin-top: 2px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer" style="gap: 10px;">
+      <button class="btn-cancel" id="details-delete-btn" style="background: #fef2f2; color: #ef4444; border-color: #fca5a5; margin-right: auto;">Delete</button>
+      <button class="btn-cancel" onclick="closeDetailsModal()">Close</button>
+      <button class="btn-save" id="details-edit-btn">Edit Contact</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
